@@ -1,6 +1,6 @@
 ################# PIZZATOR ##########################
 #													#
-#  Authors: GUY - LECOQUE - MOUSSA    				#
+#  Authors: GUY - LECOCQ - MOUSSA    				#
 #													#										
 #  Project of creation of a pizza slicer robot		#
 #													#
@@ -8,4 +8,3 @@
 #													#
 #													#
 #													#
-
