@@ -14,7 +14,30 @@ BLECharacteristic *pCharacteristic = NULL;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
+"""
+@TODO : 
+- Creation d'une fonction 'recevoir message' qui ecoutera sur le bon pCharateristic  
 
+- Preparation du swtich qui va renvoyer des données a des services
+
+- Creations de nouveaux CHARATERISTIQUES qui auront des UUID diff 
+
+- Creation d'une fonction/class d'init des charateristiques 
+http://www.louisreynier.com/fichiers/ArduinoClasses.pdf
+Compo de la classe:
+
+
+BLEService *pService
+BLECharacteristic *pCharacteristic
+        pCharac->addDescriptor(new BLE2902());
+        pCharac->setCallbacks(new MyCallbacks())
+
+BLEAdvertising *pAdvertising
+        pAdvert->addServiceUUID(SERVICE_UUID);
+        pAdvert->setScanResponse(false);
+        pAdvert->setMinPreferred(0x0);
+
+"""
 #define SERVICE_UUID        "ad98364f-23d7-44d6-b096-0435adc622ad"
 #define CHARACTERISTIC_UUID "44fb90c4-cf6d-4adb-81cf-f3d2d56f7e19"
 
@@ -102,17 +125,14 @@ void setup() {
 
 void loop()
 {
-    // notify changed value
+
     if (deviceConnected) 
     {
-         std::string value = pCharacteristic->getValue();
+         //std::string value = pCharacteristic->getValue();
          // On recupere la valeur 
-       // pCharacteristic->setValue((uint8_t*)&value, 4);
-        int double_val = valeur.toInt() * 2 ; // On convertit en int notr str
-        String double_str = "Bien recu: " + (String)double_val; 
-        pCharacteristic->setValue(double_str.c_str()); 
-        pCharacteristic->notify();
-        delay(5); // bluetooth stack will go into congestion, if too many packets are sent.
+      std::string val = "SALUT BGGGG" ;
+      envoyer_val(pCharacteristic, val) ;
+ 
     }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) 
@@ -131,3 +151,15 @@ void loop()
         oldDeviceConnected = deviceConnected;
     }
 }
+
+void envoyer_val(BLECharacteristic *pCharacteristic, std::string valeur_send)
+{
+
+    Serial.println("Valeur envoyer:");
+    Serial.print(valeur_send.c_str());
+    Serial.println();
+    pCharacteristic->setValue(valeur_send); 
+    pCharacteristic->notify();
+    delay(10); // bluetooth stack will go into congestion, if too many packets are sent.
+
+} 
