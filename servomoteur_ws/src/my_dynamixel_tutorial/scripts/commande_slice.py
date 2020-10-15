@@ -6,29 +6,40 @@ from std_msgs.msg import String
 from std_msgs.msg import Float64
 
 
-class angle_pizza:
+class cmd_slice:
     
     
 
     def __init__(self):
-        rospy.init_node('angleComSlide', anonymous=False)
-        self.pub_pizza_angle = rospy.Publisher('/tilt_controller/command', Float64, queue_size=10)
-        rospy.sleep(1)
+        rospy.init_node('comm_slice_Noce', anonymous=False) #definition noeud
+        self.pub_cmd_slice = rospy.Publisher('/pan_controller/command', Float64, queue_size=10) #definition publisher
+        rospy.sleep(1) #pause pour laisser le temps au programme
 
-    def envoyer_pos(self, position):
-        self.pos_float64 = Float64()
-        self.pos_float64.data = float(position)
-        # rospy.loginfo('L angle envoye est : ' + self.angle.data)
-        self.pub_pizza_angle.publish(self.pos_float64.data)
-        rospy.sleep(3)
+    def envoyer_vit(self, vitesse):
+        self.pos_float64 = Float64() #creation d un objet float 
+        self.pos_float64.data = float(vitesse)  #on publie dans le topic /pan_controller/command 
+        self.pub_cmd_slice.publish(self.pos_float64.data)
         
 
 
 if __name__ == '__main__':
-    p = angle_pizza()
-    p.envoyer_pos(3)
+    p = cmd_slice()
+
+    #______aller_______
+    p.envoyer_vit(-5)
+    rospy.sleep(7.5)
+
+    #______pause_______
+    p.envoyer_vit(0)
+
+    #______retour______
     rospy.sleep(1)
-    p.envoyer_pos(-3)
+    p.envoyer_vit(5)
+    rospy.sleep(7.5)
+
+    #______arret_______
+    p.envoyer_vit(0)
+
     rospy.spin()
 
 
