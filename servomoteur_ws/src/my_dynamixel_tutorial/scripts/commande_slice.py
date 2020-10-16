@@ -6,29 +6,60 @@ from std_msgs.msg import String
 from std_msgs.msg import Float64
 
 
-class angle_pizza:
-    
-    
+class cmd_slice:
+    """
+    @brief: On effectue la decoupe de la pizza
+    @param: constant (tazille plateau)
+    @return: none
+    """       
+    isDecouped = False
 
-    def __init__(self):
-        rospy.init_node('angleComSlide', anonymous=False)
-        self.pub_pizza_angle = rospy.Publisher('/tilt_controller/command', Float64, queue_size=10)
+    def init(self):
+        self.isDecouped = False #notre pizza est initialement pas decoupes
+
+        #rospy.init_node('comm_slice_Node', anonymous=False) #definition noeud
+        self.pub_cmd_slice = rospy.Publisher('/pan_slice/command', Float64, queue_size=10) #definition publisher
+        rospy.sleep(1) #pause pour laisser le temps au programme
+
+    def envoyer_vit(self, vitesse):
+        """
+        @brief: On publish notre vitesse demande
+        @param: float vitesse
+        @return: none
+        """   
+        self.pos_float64 = Float64() #On creer un objet Float qui sera envoye aux commandes
+        self.pos_float64.data = float(vitesse)
+        self.pub_cmd_slice.publish(self.pos_float64.data) #Envoi de notre data
+
+    def couper_Pizza(self):
+        #______aller_______
+        self.envoyer_vit(-5)
+        rospy.sleep(7.5)
+
+        #______pause_______
+        self.envoyer_vit(0)
+
+        #______retour______
         rospy.sleep(1)
+        self.envoyer_vit(5)
+        rospy.sleep(7.5)
+    
+        #______arret_______
+        self.envoyer_vit(0)
 
-    def envoyer_pos(self, position):
-        self.pos_float64 = Float64()
-        self.pos_float64.data = float(position)
-        # rospy.loginfo('L angle envoye est : ' + self.angle.data)
-        self.pub_pizza_angle.publish(self.pos_float64.data)
-        rospy.sleep(3)
-        
+        self.isDecouped = true  
 
+    def getStatusDecoupe(self):
+        return self.isDecouped     
 
+"""
 if __name__ == '__main__':
-    p = angle_pizza()
-    p.envoyer_pos(3)
-    rospy.sleep(1)
-    p.envoyer_pos(-3)
-    rospy.spin()
+    try:
+       # p = cmd_slice()
+       # p.couper_Pizza()
+       # rospy.spin()
+    except rospy.ROSInterruptException:
+        pass
+"""
 
 

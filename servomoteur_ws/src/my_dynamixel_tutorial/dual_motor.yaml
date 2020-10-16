@@ -1,0 +1,25 @@
+pan_rotate:
+    controller:
+        package: dynamixel_controllers
+        module: joint_torque_controller
+        type: JointTorqueController
+    joint_name: pan_rotate
+    joint_speed: 1.17
+    motor:
+        id: 2
+        init: 0
+        min: 0
+        max: 4095
+
+pan_slice:
+    controller:
+        package: dynamixel_controllers
+        module: joint_torque_controller
+        type: JointTorqueController
+    joint_name: pan_slice
+    joint_speed: 1.17
+    motor:
+        id: 3
+        init: 0
+        min: 0
+        max: 4095
