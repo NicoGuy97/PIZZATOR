@@ -6,79 +6,70 @@
 #include <BLE2902.h>
 
 
-String valeur;
-
+String valeur_part;
+bool first_init = false;
 /* Creation of global variables */
 BLEServer *pServer = NULL;
-BLECharacteristic *pCharacteristic = NULL;
+BLECharacteristic *pCharacteristic_1 = NULL;
+BLECharacteristic *pCharacteristic_2 = NULL;
+BLECharacteristic *pCharacteristic_3 = NULL;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
-"""
-@TODO : 
-- Creation d'une fonction 'recevoir message' qui ecoutera sur le bon pCharateristic  
 
-- Preparation du swtich qui va renvoyer des données a des services
-
-- Creations de nouveaux CHARATERISTIQUES qui auront des UUID diff 
-
-- Creation d'une fonction/class d'init des charateristiques 
-http://www.louisreynier.com/fichiers/ArduinoClasses.pdf
-Compo de la classe:
-
-
-BLEService *pService
-BLECharacteristic *pCharacteristic
-        pCharac->addDescriptor(new BLE2902());
-        pCharac->setCallbacks(new MyCallbacks())
-
-BLEAdvertising *pAdvertising
-        pAdvert->addServiceUUID(SERVICE_UUID);
-        pAdvert->setScanResponse(false);
-        pAdvert->setMinPreferred(0x0);
-
-"""
 #define SERVICE_UUID        "ad98364f-23d7-44d6-b096-0435adc622ad"
-#define CHARACTERISTIC_UUID "44fb90c4-cf6d-4adb-81cf-f3d2d56f7e19"
+#define CHARACTERISTIC_UUID_1 "44fb90c4-cf6d-4adb-81cf-f3d2d56f7e19"
+#define CHARACTERISTIC_UUID_2 "345eb7a1-29b3-4d9b-b792-abb3bb621544"
+#define CHARACTERISTIC_UUID_3 "8cfa9c3b-172c-4520-85ce-34bc43f623c3"
 
 /* *Call back pour renvoyer des notifs */
 class MyServerCallbacks: public BLEServerCallbacks 
 {
-    void onConnect(BLEServer* pServer) 
+    void onConnect(BLEServer *pServer) 
     {
       deviceConnected = true;
     };
 
-    void onDisconnect(BLEServer* pServer) {
+    void onDisconnect(BLEServer *pServer) {
 
       deviceConnected = false;
     }
 };
 
-/* Classe de Callback appelé a chaque interuption */
-class MyCallbacks: public BLECharacteristicCallbacks 
+
+/* Classe de Callback appelé a en cas de write  */
+class MyCallbacks_1: public BLECharacteristicCallbacks 
 {
+  //On recupere le nombre de part 
     void onWrite(BLECharacteristic *pCharacteristic) 
     {
       std::string value = pCharacteristic->getValue();
       if (value.length() > 0) 
       {
-        valeur = "" ;
+        valeur_part = "" ;
         Serial.println("*********");
         Serial.print("Valeur entrée: ");
         for (int i = 0; i < value.length(); i++)
         {
           //Serial.print(value[i]);
-          valeur = valeur + value[i] ;
+          valeur_part = valeur_part + value[i] ;
         }
         Serial.println();
-        Serial.println(valeur);
+        Serial.println(valeur_part);
         Serial.println("*********");
       }
-      if(value[0] == '1')
-      {
-        Serial.println("WOOOOOOOOW T'es dingue mec !!!!!");
-      }
+    }
+};
+
+class MyCallbacks_2: public BLECharacteristicCallbacks 
+{
+    void onRead(BLECharacteristic *pCharacteristic) 
+    { 
+        // On effectue l'arret d'urgence 
+        if (first_init == true)
+        {
+          Serial.println(" / * / * / * / * / EMERGENCY INITIALIZED * $ * $ * $ * $ * ");
+        }
     }
 };
 
@@ -97,29 +88,45 @@ void setup() {
   // Create the BLE Server
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
-
-  // Create the BLE Service
   BLEService *pService = pServer->createService(SERVICE_UUID);
-  // On lui affecte des characteristique par default (UUID ...)
-  pCharacteristic = pService->createCharacteristic(
-                      CHARACTERISTIC_UUID,
+  //BLEService *pService2 = pServer->createService(SERVICE_UUID);
+  
+  // Recuperation du nombre de part
+  pCharacteristic_1 = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID_1,
                       BLECharacteristic::PROPERTY_READ   |
                       BLECharacteristic::PROPERTY_WRITE  |
                       BLECharacteristic::PROPERTY_NOTIFY |
                       BLECharacteristic::PROPERTY_INDICATE );
 
-  pCharacteristic->addDescriptor(new BLE2902());
-  pCharacteristic->setCallbacks(new MyCallbacks()); // On lui affecte une callback
-  // Valeur par defaut dans la charachteristic de base:
+  pCharacteristic_1->addDescriptor(new BLE2902());
+  pCharacteristic_1->setCallbacks(new MyCallbacks_1());
 
+//Recuepration de la commande RESET 
+  pCharacteristic_2 = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID_2,
+                      BLECharacteristic::PROPERTY_READ |
+                      BLECharacteristic::PROPERTY_NOTIFY);
+
+  pCharacteristic_2->addDescriptor(new BLE2902());
+  pCharacteristic_2->setCallbacks(new MyCallbacks_2());
+
+  /* Gestion du chargement du PIZZATOR */
+  pCharacteristic_3 = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID_3,
+                      BLECharacteristic::PROPERTY_READ   |
+                      BLECharacteristic::PROPERTY_WRITE  |
+                      BLECharacteristic::PROPERTY_NOTIFY |
+                      BLECharacteristic::PROPERTY_INDICATE );
+
+  pCharacteristic_3->addDescriptor(new BLE2902());
+  //pCharacteristic_3->setCallbacks(new MyCallbacks_3());
+ 
   /* Demmarage du Service */
   pService->start();
-  /* Début de  l'advertising */
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(false);
-  pAdvertising->setMinPreferred(0x0);  
-  BLEDevice::startAdvertising();
+
+  /* Demmarage de l'advertising */
+  set_Advertising();
   Serial.println("Attente d'une connection d'un client pour notify...");
 }
 
@@ -128,10 +135,13 @@ void loop()
 
     if (deviceConnected) 
     {
-         //std::string value = pCharacteristic->getValue();
-         // On recupere la valeur 
-      std::string val = "SALUT BGGGG" ;
-      envoyer_val(pCharacteristic, val) ;
+      std::string val = "NB_PART" ;
+      std::string val2 = "WANT TO CANCEL PIZZATOR ?" ;
+      std::string val3 = "Avancement: " ;
+      envoyer_val(pCharacteristic_1, val) ;
+      envoyer_val(pCharacteristic_2, val2) ;
+      envoyer_val(pCharacteristic_3, val3) ;
+      first_init = true;
  
     }
     // disconnecting
@@ -150,16 +160,26 @@ void loop()
         // do stuff here on connecting
         oldDeviceConnected = deviceConnected;
     }
+
+    //Serial.print(" ------ > LA VALEUR DE LA PART EST: ");
+    //Serial.print(valeur_part);
+    //Serial.println();
 }
 
 void envoyer_val(BLECharacteristic *pCharacteristic, std::string valeur_send)
 {
-
-    Serial.println("Valeur envoyer:");
-    Serial.print(valeur_send.c_str());
-    Serial.println();
     pCharacteristic->setValue(valeur_send); 
     pCharacteristic->notify();
     delay(10); // bluetooth stack will go into congestion, if too many packets are sent.
 
 } 
+
+void set_Advertising()
+{
+  /* Début de  l'advertising */
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(false);
+  pAdvertising->setMinPreferred(0x0);  
+  BLEDevice::startAdvertising();
+}
