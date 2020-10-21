@@ -4,7 +4,18 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLE2902.h>
+#include <ros.h>
+#include <std_msgs/String.h>
 
+
+int Capteur_distance = 2;  // Broche analogique pour lire le capteur IR
+ros::NodeHandle  nh;
+
+std_msgs::String str_msg_data_emergency;
+std_msgs::String str_msg_data;
+
+ros::Publisher nb_part_pub("nb_part_pub", &str_msg_data);
+ros::Publisher emergency_pub("emergency_pub", &str_msg_data_emergency);
 
 String valeur_part;
 bool first_init = false;
@@ -57,6 +68,11 @@ class MyCallbacks_1: public BLECharacteristicCallbacks
         Serial.println();
         Serial.println(valeur_part);
         Serial.println("*********");
+        /* On publish nore valeur sur un node*/
+        str_msg_data.data = valeur_part.c_str();
+        nb_part_pub.publish( &str_msg_data );
+        nh.spinOnce();
+        //delay(1000);
       }
     }
 };
@@ -69,19 +85,27 @@ class MyCallbacks_2: public BLECharacteristicCallbacks
         if (first_init == true)
         {
           Serial.println(" / * / * / * / * / EMERGENCY INITIALIZED * $ * $ * $ * $ * ");
+          str_msg_data_emergency.data = "emergency";
+          emergency_pub.publish( &str_msg_data_emergency);
+          nh.spinOnce();
+          //delay(1000);
         }
     }
 };
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(57600);
   Serial.println("----------------------------------------------------------");
   Serial.println("Démarrage du Service de reception Bluetooth LE");
-  Serial.println("Nom de Réseau: . . . . . . PIZZATOR");
+  Serial.println("Nom de Réseau:. . . . . . . PIZZATOR");
   Serial.println("Type de donnée recu:");
-  Serial.println(" . . . . . . . . . . . . . nb_part");
-  Serial.println(" . . . . . . . . . . . . . xxxxxxx");
-  
+  Serial.println(". . . . . . . . . . . . . . nb_part");
+  Serial.println(". . . . . . . . . . . . . . xxxxxxx");
+  // innit des pin 
+
+  //pinMode(2, INPUT);
+
+
   // On init le device BLE 
   BLEDevice::init("PIZZATOR"); 
 
@@ -126,13 +150,24 @@ void setup() {
   pService->start();
 
   /* Demmarage de l'advertising */
+  
   set_Advertising();
   Serial.println("Attente d'une connection d'un client pour notify...");
+  Serial.println("Launching ROSSERIAL communication...");
+  nh.initNode();
+  nh.advertise(nb_part_pub);
+  nh.advertise(emergency_pub);
 }
 
 void loop()
 {
-
+  /*
+    float dist = digitalRead(2);
+    float volts = dist  ;//* 0.0048828125;  // valeur du capteur * (5/1024)
+    int distance = dist ;//5 * pow (volts, -1);  // élaboré à partir du graphique 5 = distance théorique / (1 / Volts)
+    //distance est en cm 
+    Serial.println(distance);
+    */
     if (deviceConnected) 
     {
       std::string val = "NB_PART" ;
@@ -142,7 +177,12 @@ void loop()
       envoyer_val(pCharacteristic_2, val2) ;
       envoyer_val(pCharacteristic_3, val3) ;
       first_init = true;
- 
+      /*
+      while (distance > 17 )
+      {
+         Serial.println("pas de pizza");
+      }
+      */
     }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) 
@@ -161,6 +201,7 @@ void loop()
         oldDeviceConnected = deviceConnected;
     }
 
+    
     //Serial.print(" ------ > LA VALEUR DE LA PART EST: ");
     //Serial.print(valeur_part);
     //Serial.println();
