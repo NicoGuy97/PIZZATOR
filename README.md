@@ -17,7 +17,10 @@ Hardware, software and technoligies used for this project :
 * 3 servomotors Dynamixel AX-12
 * 1 analog sensor SHARP
 * 1 ESP 32 TTGo T-Display (Wi-Fi + BLE)
-  
+
+*3D Print* :
+* file with the .stl, piece ready for the printing 
+
 *application* : 
 * contains the code for the application
 
