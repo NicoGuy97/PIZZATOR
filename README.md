@@ -26,3 +26,6 @@ Hardware, software and technoligies used for this project :
 
 *src_ESP32* :
 * contain all ESP32 source files and data. The Folder BLE_reception include the source file in order to manage BLE reception and emmisions of data from the app/µContr
+
+*link to our YouTube video* :
+* [![](https://img.youtu.be/hC-m_DlMcJs.jpg)](https://youtu.be/hC-m_DlMcJs)
