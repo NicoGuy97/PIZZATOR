@@ -1,4 +1,3 @@
-#
 # <center> <h2>PIZZATOR</h2> </center>	
 ## Authors: GUY - LECOCQ - MOUSSA	
 ## Project of creation of a pizza slicer robot
