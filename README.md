@@ -1,7 +1,7 @@
 # <center> <h2>PIZZATOR</h2> </center>	
 ## Authors: GUY - LECOCQ - MOUSSA	
-## Project of creation of a pizza slicer robot
-#
+## Project of creation of a pizza slicer robot 
+
 Few words on the project :  
 We had 20h to create a prototype with certains constraints such as using ROS, BLE, printing a 3D piece, ...  
 We wanted to make a unique piece of art abble of cutting a pizza in a specific number of slices. You can choose the number of slices and see the progress of the cutting.
